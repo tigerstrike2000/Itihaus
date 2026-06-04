@@ -14,12 +14,16 @@ class Game {
         this.empire = null;
         this.economy = null;
         this.resourceManager = null;
+        this.mapSystem = null;
+        this.buildingQueue = [];
+        this.selectedCell = null;
 
         this.init();
     }
 
     init() {
         this.setupEventListeners();
+        this.mapSystem = new MapSystem(this);
         this.showCivilizationMenu();
     }
 
@@ -36,6 +40,12 @@ class Game {
         
         // Building
         document.getElementById('build-btn').addEventListener('click', () => this.openBuildingModal());
+
+        // Map click handling
+        const gameView = document.getElementById('game-view');
+        if (gameView) {
+            gameView.addEventListener('click', (e) => this.onMapClick(e));
+        }
     }
 
     showCivilizationMenu() {
@@ -78,10 +88,13 @@ class Game {
         civilizations.forEach(civ => {
             const item = document.createElement('div');
             item.className = 'civilization-item';
+            
+            const location = this.mapSystem.getStartingLocation(civ.name);
             item.innerHTML = `
                 <h3>${civ.name}</h3>
                 <p>${civ.description}</p>
                 <small>${civ.bonus}</small>
+                <div class="civ-location">Starting: ${location.name}</div>
             `;
             item.addEventListener('click', () => this.startGame(civ));
             civList.appendChild(item);
@@ -97,6 +110,12 @@ class Game {
         this.economy = new Economy(this.empire);
         this.resourceManager = new ResourceManager(this.empire);
         
+        // Apply starting location bonuses
+        const startLocation = this.mapSystem.getStartingLocation(civilization.name);
+        Object.entries(startLocation.bonusResources).forEach(([resource, amount]) => {
+            this.empire.resources[resource] += amount;
+        });
+
         // Initialize production buildings
         this.resourceManager.addProduction('Farm', 'Food', 15);
         this.resourceManager.addProduction('Lumber Mill', 'Wood', 8);
@@ -112,7 +131,24 @@ class Game {
         this.gameRunning = true;
         this.gamePaused = false;
 
+        // Initialize map display
+        this.mapSystem.initializeMap(
+            document.getElementById('game-board').offsetWidth,
+            document.getElementById('game-board').offsetHeight
+        );
+
+        // Place starting buildings on the map
+        const startPos = startLocation.position;
+        for (let i = 0; i < this.resourceManager.buildings.length; i++) {
+            const building = this.resourceManager.buildings[i];
+            const newBuilding = new Building(building.type, startPos.x + i, startPos.y, {});
+            newBuilding.isComplete = true;
+            newBuilding.constructionProgress = 1;
+            this.mapSystem.placeBuilding(startPos.x + i, startPos.y, newBuilding, civilization.name);
+        }
+
         this.updateUI();
+        this.render();
         this.gameLoop(performance.now());
     }
 
@@ -129,12 +165,16 @@ class Game {
         }
 
         this.updateUI();
+        this.render();
         requestAnimationFrame(this.gameLoop);
     }
 
     update(deltaTime) {
         // Apply game speed multiplier
         const scaledDeltaTime = deltaTime * this.gameSpeed;
+
+        // Update building construction
+        this.updateBuildingConstruction(scaledDeltaTime);
 
         // Update resource production
         this.resourceManager.calculateProduction(scaledDeltaTime);
@@ -147,6 +187,167 @@ class Game {
 
         // Progress time (1 real second = 1 game year at 1x speed)
         this.currentYear += scaledDeltaTime / 5;
+    }
+
+    updateBuildingConstruction(deltaTime) {
+        // Update all buildings on map
+        for (let y = 0; y < this.mapSystem.gridSize; y++) {
+            for (let x = 0; x < this.mapSystem.gridSize; x++) {
+                const cell = this.mapSystem.grid[y][x];
+                if (cell.building) {
+                    const completed = cell.building.updateConstruction(deltaTime);
+                    if (completed) {
+                        // Building completed - add to production
+                        this.resourceManager.addProduction(
+                            cell.building.type,
+                            this.getBuildingResourceType(cell.building.type),
+                            this.getBuildingProductionRate(cell.building.type)
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    getBuildingResourceType(buildingType) {
+        const types = {
+            'Farm': 'Food',
+            'Lumber Mill': 'Wood',
+            'Quarry': 'Stone',
+            'Mine': 'Metal',
+            'Market': 'Luxury'
+        };
+        return types[buildingType] || 'Food';
+    }
+
+    getBuildingProductionRate(buildingType) {
+        const rates = {
+            'Farm': 8,
+            'Lumber Mill': 5,
+            'Quarry': 3,
+            'Mine': 2,
+            'Market': 0.5
+        };
+        return rates[buildingType] || 1;
+    }
+
+    render() {
+        const gameView = document.getElementById('game-view');
+        if (!gameView || !this.mapSystem) return;
+
+        // Only render if map system is ready
+        if (this.mapSystem.cellSize === 0) return;
+
+        const canvas = document.getElementById('game-canvas');
+        if (!canvas) {
+            this.createCanvas(gameView);
+            return;
+        }
+
+        this.drawMap(canvas);
+    }
+
+    createCanvas(container) {
+        container.innerHTML = '';
+        const canvas = document.createElement('canvas');
+        canvas.id = 'game-canvas';
+        canvas.width = container.offsetWidth;
+        canvas.height = container.offsetHeight;
+        container.appendChild(canvas);
+    }
+
+    drawMap(canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#0a0e27';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw grid
+        for (let y = 0; y < this.mapSystem.gridSize; y++) {
+            for (let x = 0; x < this.mapSystem.gridSize; x++) {
+                this.drawCell(ctx, x, y);
+            }
+        }
+    }
+
+    drawCell(ctx, gridX, gridY) {
+        const cell = this.mapSystem.grid[gridY][gridX];
+        const x = gridX * this.mapSystem.cellSize;
+        const y = gridY * this.mapSystem.cellSize;
+        const size = this.mapSystem.cellSize;
+
+        // Draw terrain
+        ctx.fillStyle = this.mapSystem.getTerrainColor(cell.terrain);
+        ctx.fillRect(x, y, size, size);
+
+        // Draw grid lines
+        ctx.strokeStyle = '#1a3a52';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, size, size);
+
+        // Draw building if present
+        if (cell.building) {
+            ctx.fillStyle = this.mapSystem.getBuildingColor(cell.building);
+            const buildingSize = size * 0.7;
+            const offsetX = (size - buildingSize) / 2;
+            const offsetY = (size - buildingSize) / 2;
+            ctx.fillRect(x + offsetX, y + offsetY, buildingSize, buildingSize);
+
+            // Draw construction progress
+            if (!cell.building.isComplete) {
+                ctx.strokeStyle = '#ff9900';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x + offsetX, y + offsetY, buildingSize, buildingSize);
+
+                // Progress bar
+                ctx.fillStyle = '#ff9900';
+                const progressWidth = buildingSize * cell.building.constructionProgress;
+                ctx.fillRect(x + offsetX, y + offsetY + buildingSize + 2, progressWidth, 3);
+            }
+        }
+
+        // Highlight selected cell
+        if (this.selectedCell && this.selectedCell.x === gridX && this.selectedCell.y === gridY) {
+            ctx.strokeStyle = '#16a085';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x, y, size, size);
+        }
+    }
+
+    onMapClick(e) {
+        const canvas = document.getElementById('game-canvas');
+        if (!canvas) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+
+        const gridX = Math.floor(clickX / this.mapSystem.cellSize);
+        const gridY = Math.floor(clickY / this.mapSystem.cellSize);
+
+        this.selectedCell = { x: gridX, y: gridY };
+        this.showCellInfo(gridX, gridY);
+    }
+
+    showCellInfo(x, y) {
+        const cell = this.mapSystem.getCellAtPosition(x, y);
+        if (!cell) return;
+
+        let info = `<strong>Cell (${x}, ${y})</strong><br>`;
+        info += `Terrain: ${cell.terrain}<br>`;
+        
+        if (cell.building) {
+            info += `Building: ${cell.building.type}<br>`;
+            info += `Construction: ${cell.building.getProgressPercentage()}%<br>`;
+            info += `Workers: ${cell.building.workers}/${cell.building.maxWorkers}`;
+        } else {
+            info += `Empty cell - click Build to construct`;
+        }
+
+        // Show in a simple tooltip or update sidebar
+        const productionList = document.getElementById('production-list');
+        if (productionList) {
+            productionList.innerHTML = `<div style="padding: 10px; background: #0f3460; border-radius: 3px;">${info}</div>` + productionList.innerHTML;
+        }
     }
 
     updateUI() {
@@ -270,10 +471,14 @@ class Game {
         const buildingList = document.getElementById('building-list');
 
         const buildings = [
-            { name: 'Farm', cost: { Wood: 50, Stone: 30 }, bonus: 'Food +10/s' },
-            { name: 'Granary', cost: { Wood: 100, Stone: 80 }, bonus: 'Food Storage +500' },
-            { name: 'Market', cost: { Stone: 100, Wood: 50 }, bonus: 'Trade Routes +3' },
-            { name: 'Library', cost: { Stone: 150, Luxury: 20 }, bonus: 'Research +5' },
+            { name: 'Farm', cost: { Wood: 50, Stone: 30 }, bonus: 'Food +8/s', time: 10 },
+            { name: 'Granary', cost: { Wood: 100, Stone: 80 }, bonus: 'Food Storage +500', time: 20 },
+            { name: 'Market', cost: { Stone: 100, Wood: 50 }, bonus: 'Luxury +1/s', time: 15 },
+            { name: 'Library', cost: { Stone: 150, Luxury: 20 }, bonus: 'Research +5', time: 30 },
+            { name: 'Lumber Mill', cost: { Stone: 60, Wood: 40 }, bonus: 'Wood +5/s', time: 12 },
+            { name: 'Quarry', cost: { Wood: 70, Stone: 50 }, bonus: 'Stone +3/s', time: 15 },
+            { name: 'Mine', cost: { Wood: 80, Stone: 100 }, bonus: 'Metal +2/s', time: 25 },
+            { name: 'Temple', cost: { Stone: 200, Luxury: 50 }, bonus: 'Happiness +10', time: 40 }
         ];
 
         buildingList.innerHTML = '';
@@ -288,12 +493,46 @@ class Game {
                 <h4>${building.name}</h4>
                 <p>${building.bonus}</p>
                 <div class="building-cost">Cost: ${costs}</div>
-                <button class="action-btn">Build</button>
+                <div class="building-time">Construction: ${building.time}s</div>
+                <button class="action-btn" onclick="window.game.constructBuilding('${building.name}', ${JSON.stringify(building.cost).replace(/"/g, '\\"')}, ${building.time})">Build</button>
             `;
             buildingList.appendChild(item);
         });
 
         modal.classList.remove('hidden');
+    }
+
+    constructBuilding(buildingType, costs, constructionTime) {
+        if (!this.selectedCell) {
+            alert('Select a cell on the map first');
+            return;
+        }
+
+        const cell = this.mapSystem.getCellAtPosition(this.selectedCell.x, this.selectedCell.y);
+        if (cell.building) {
+            alert('Cell already has a building');
+            return;
+        }
+
+        // Check resources
+        for (const [resource, amount] of Object.entries(costs)) {
+            if (!this.empire.resources[resource] || this.empire.resources[resource] < amount) {
+                alert(`Insufficient ${resource}`);
+                return;
+            }
+        }
+
+        // Consume resources
+        for (const [resource, amount] of Object.entries(costs)) {
+            this.empire.resources[resource] -= amount;
+        }
+
+        // Create building
+        const building = new Building(buildingType, this.selectedCell.x, this.selectedCell.y, costs);
+        building.constructionTime = constructionTime;
+        this.mapSystem.placeBuilding(this.selectedCell.x, this.selectedCell.y, building, this.empire.name);
+
+        document.getElementById('building-modal').classList.add('hidden');
     }
 }
 

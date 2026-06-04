@@ -12,7 +12,7 @@
         <div id="game-container" class="game-container">
             <!-- Header -->
             <header class="header">
-                <h1>Economic History Game</h1>
+                <h1>Economic History Game - Grid-Based World</h1>
                 <div class="game-controls">
                     <button id="pause-btn" class="btn">Pause</button>
                     <button id="menu-btn" class="btn">Menu</button>
@@ -63,7 +63,7 @@
 
                     <!-- Production panel -->
                     <div class="production-panel">
-                        <h3>Production</h3>
+                        <h3>Cities & Construction</h3>
                         <div id="production-list" class="production-list">
                             <!-- Dynamically populated -->
                         </div>
@@ -71,15 +71,14 @@
                 </aside>
 
                 <!-- Main game area -->
-                <section class="game-board">
+                <section class="game-board" id="game-board">
                     <div id="game-view" class="game-view">
                         <div class="game-content">
-                            <h2>Welcome to the Ancient World</h2>
-                            <p>Manage your civilization and expand your empire through trade and resource management.</p>
+                            <h2>World Map</h2>
+                            <p>Click on cells to build structures. Buildings take time to construct.</p>
                             <div class="game-actions">
                                 <button id="trade-btn" class="action-btn">Trading Post</button>
                                 <button id="build-btn" class="action-btn">Build Structure</button>
-                                <button id="expand-btn" class="action-btn">Expand Territory</button>
                             </div>
                         </div>
                     </div>
@@ -105,7 +104,7 @@
         <div id="start-menu" class="modal">
             <div class="modal-content">
                 <h2>Choose Your Civilization</h2>
-                <p class="modal-subtitle">Select an ancient empire and begin your economic journey</p>
+                <p class="modal-subtitle">Select an ancient empire and begin your economic journey. Each civilization starts in a different location on the world map.</p>
                 <div id="civilization-list" class="civilization-list">
                     <!-- Dynamically populated with civilization options -->
                 </div>
@@ -146,6 +145,7 @@
                     <h2>Build Structure</h2>
                     <button class="close-btn" onclick="closeBuildingModal()">&times;</button>
                 </div>
+                <p class="building-info">Select a cell on the map first, then choose a structure to build. Construction takes time and consumes resources.</p>
                 <div class="building-list" id="building-list">
                     <!-- Dynamically populated -->
                 </div>
@@ -156,6 +156,7 @@
     <!-- Scripts -->
     <script src="js/resources.js"></script>
     <script src="js/economy.js"></script>
+    <script src="js/map.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/game.js"></script>
 </body>
