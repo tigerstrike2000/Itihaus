@@ -1,0 +1,618 @@
+/* ========================
+   General Styles
+   ======================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    overflow: hidden;
+}
+
+#app {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ========================
+   Game Container
+   ======================== */
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* ========================
+   Header
+   ======================== */
+
+.header {
+    background: linear-gradient(135deg, #2d3561 0%, #1a1a2e 100%);
+    border-bottom: 2px solid #0f3460;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.header h1 {
+    font-size: 24px;
+    color: #e0e0e0;
+}
+
+.game-controls {
+    display: flex;
+    gap: 10px;
+}
+
+/* ========================
+   Buttons
+   ======================== */
+
+.btn {
+    padding: 8px 16px;
+    background-color: #0f3460;
+    border: 1px solid #16a085;
+    color: #16a085;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #16a085;
+    color: #1a1a2e;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.action-btn {
+    padding: 12px 24px;
+    background-color: #16a085;
+    border: 1px solid #0fa080;
+    color: #1a1a2e;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+    background-color: #0fa080;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(22, 160, 133, 0.3);
+}
+
+.action-btn:active {
+    transform: scale(0.98);
+}
+
+/* ========================
+   Main Content
+   ======================== */
+
+.main-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    gap: 10px;
+    padding: 10px;
+}
+
+/* ========================
+   Sidebar
+   ======================== */
+
+.sidebar {
+    width: 300px;
+    background-color: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 4px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    overflow-y: auto;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar h2 {
+    color: #16a085;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.sidebar h3 {
+    color: #16a085;
+    font-size: 14px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #0f3460;
+    padding-bottom: 5px;
+}
+
+/* ========================
+   Empire Info
+   ======================== */
+
+.empire-info {
+    border-bottom: 1px solid #0f3460;
+    padding-bottom: 15px;
+}
+
+.empire-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.stat {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    padding: 4px;
+}
+
+.stat label {
+    color: #b0b0b0;
+}
+
+.stat span {
+    color: #16a085;
+    font-weight: bold;
+}
+
+/* ========================
+   Resources Panel
+   ======================== */
+
+.resources-panel {
+    border-bottom: 1px solid #0f3460;
+    padding-bottom: 15px;
+}
+
+.resources-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.resource-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 6px;
+    background-color: #0f3460;
+    border-radius: 3px;
+}
+
+.resource-name {
+    color: #b0b0b0;
+}
+
+.resource-amount {
+    color: #16a085;
+    font-weight: bold;
+}
+
+.resource-change {
+    color: #e0a84b;
+    font-size: 11px;
+    margin-left: 5px;
+}
+
+/* ========================
+   Market Panel
+   ======================== */
+
+.market-panel {
+    border-bottom: 1px solid #0f3460;
+    padding-bottom: 15px;
+}
+
+.prices-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.price-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 6px;
+    background-color: #0f3460;
+    border-radius: 3px;
+}
+
+.price-name {
+    color: #b0b0b0;
+}
+
+.price-value {
+    color: #e0a84b;
+    font-weight: bold;
+}
+
+/* ========================
+   Production Panel
+   ======================== */
+
+.production-panel {
+    flex: 1;
+}
+
+.production-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.production-item {
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    padding: 8px;
+    background-color: #0f3460;
+    border-radius: 3px;
+}
+
+.production-name {
+    color: #16a085;
+    font-weight: bold;
+    margin-bottom: 3px;
+}
+
+.production-rate {
+    color: #b0b0b0;
+}
+
+/* ========================
+   Game Board
+   ======================== */
+
+.game-board {
+    flex: 1;
+    background-color: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+.game-view {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+    color: #b0b0b0;
+    font-size: 18px;
+    position: relative;
+}
+
+.game-content {
+    text-align: center;
+}
+
+.game-content h2 {
+    color: #16a085;
+    margin-bottom: 15px;
+    font-size: 32px;
+}
+
+.game-content p {
+    color: #b0b0b0;
+    margin-bottom: 30px;
+    font-size: 16px;
+}
+
+.game-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ========================
+   Footer
+   ======================== */
+
+.footer {
+    background-color: #0f3460;
+    border-top: 1px solid #16a085;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+}
+
+.game-speed {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.game-speed input {
+    width: 100px;
+    accent-color: #16a085;
+}
+
+#speed-display {
+    color: #16a085;
+    font-weight: bold;
+    min-width: 30px;
+}
+
+.game-stats-footer {
+    color: #16a085;
+    font-weight: bold;
+    display: flex;
+    gap: 15px;
+}
+
+/* ========================
+   Modal / Start Menu
+   ======================== */
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background-color: #16213e;
+    border: 2px solid #16a085;
+    border-radius: 8px;
+    padding: 40px;
+    max-width: 700px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-content h2 {
+    color: #16a085;
+    text-align: center;
+    font-size: 24px;
+}
+
+.modal-subtitle {
+    color: #b0b0b0;
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #16a085;
+    font-size: 28px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-btn:hover {
+    color: #0fa080;
+}
+
+.civilization-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+}
+
+.civilization-item {
+    background-color: #0f3460;
+    border: 2px solid #16a085;
+    border-radius: 6px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.civilization-item:hover {
+    background-color: #16a085;
+    color: #1a1a2e;
+    transform: scale(1.05);
+}
+
+.civilization-item h3 {
+    color: inherit;
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.civilization-item p {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+/* ========================
+   Trading Modal
+   ======================== */
+
+.trading-content {
+    max-width: 500px;
+}
+
+.trading-interface {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.trade-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.trade-section h3 {
+    color: #16a085;
+    font-size: 14px;
+}
+
+.trade-select,
+#sell-amount,
+#buy-resource {
+    padding: 8px;
+    background-color: #0f3460;
+    border: 1px solid #16a085;
+    color: #e0e0e0;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.trade-select:focus,
+#sell-amount:focus,
+#buy-resource:focus {
+    outline: none;
+    border-color: #0fa080;
+    box-shadow: 0 0 5px rgba(22, 160, 133, 0.3);
+}
+
+#trade-result {
+    color: #e0a84b;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+/* ========================
+   Building Modal
+   ======================== */
+
+.building-content {
+    max-width: 600px;
+}
+
+.building-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.building-item {
+    background-color: #0f3460;
+    border: 1px solid #16a085;
+    border-radius: 6px;
+    padding: 15px;
+    text-align: center;
+}
+
+.building-item h4 {
+    color: #16a085;
+    margin-bottom: 8px;
+}
+
+.building-item p {
+    font-size: 12px;
+    color: #b0b0b0;
+    margin-bottom: 10px;
+}
+
+.building-cost {
+    font-size: 11px;
+    color: #e0a84b;
+    margin-bottom: 10px;
+}
+
+.building-item .action-btn {
+    width: 100%;
+    padding: 8px;
+}
+
+/* ========================
+   Scrollbar Styling
+   ======================== */
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0f3460;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #16a085;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #0fa080;
+}
+
+/* ========================
+   Responsive Design
+   ======================== */
+
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 250px;
+    }
+
+    .main-content {
+        gap: 5px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        max-height: 30vh;
+    }
+
+    .civilization-list {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+
+    .trading-interface {
+        grid-template-columns: 1fr;
+    }
+}

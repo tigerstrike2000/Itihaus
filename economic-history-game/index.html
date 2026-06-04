@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Economic History Game - Itihaus</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Main game container -->
+        <div id="game-container" class="game-container">
+            <!-- Header -->
+            <header class="header">
+                <h1>Economic History Game</h1>
+                <div class="game-controls">
+                    <button id="pause-btn" class="btn">Pause</button>
+                    <button id="menu-btn" class="btn">Menu</button>
+                </div>
+            </header>
+
+            <!-- Main content -->
+            <main class="main-content">
+                <!-- Sidebar: Empire info -->
+                <aside class="sidebar">
+                    <div class="empire-info">
+                        <h2 id="empire-name">Empire Name</h2>
+                        <div class="empire-stats">
+                            <div class="stat">
+                                <label>Population:</label>
+                                <span id="population">0</span>
+                            </div>
+                            <div class="stat">
+                                <label>Treasury:</label>
+                                <span id="treasury">0</span> Gold
+                            </div>
+                            <div class="stat">
+                                <label>Happiness:</label>
+                                <span id="happiness">50</span>%
+                            </div>
+                            <div class="stat">
+                                <label>Food Storage:</label>
+                                <span id="food-storage">0</span> units
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resources panel -->
+                    <div class="resources-panel">
+                        <h3>Resources</h3>
+                        <div id="resources-list" class="resources-list">
+                            <!-- Dynamically populated -->
+                        </div>
+                    </div>
+
+                    <!-- Market panel -->
+                    <div class="market-panel">
+                        <h3>Market Prices</h3>
+                        <div id="prices-list" class="prices-list">
+                            <!-- Dynamically populated -->
+                        </div>
+                    </div>
+
+                    <!-- Production panel -->
+                    <div class="production-panel">
+                        <h3>Production</h3>
+                        <div id="production-list" class="production-list">
+                            <!-- Dynamically populated -->
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Main game area -->
+                <section class="game-board">
+                    <div id="game-view" class="game-view">
+                        <div class="game-content">
+                            <h2>Welcome to the Ancient World</h2>
+                            <p>Manage your civilization and expand your empire through trade and resource management.</p>
+                            <div class="game-actions">
+                                <button id="trade-btn" class="action-btn">Trading Post</button>
+                                <button id="build-btn" class="action-btn">Build Structure</button>
+                                <button id="expand-btn" class="action-btn">Expand Territory</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- Footer: Game speed and time -->
+            <footer class="footer">
+                <div class="game-speed">
+                    <label>Game Speed:</label>
+                    <input type="range" id="speed-slider" min="0.5" max="3" step="0.5" value="1">
+                    <span id="speed-display">1x</span>
+                </div>
+                <div class="game-stats-footer">
+                    <span>Year: <span id="year">1</span></span>
+                    <span>| Population: <span id="footer-population">0</span></span>
+                    <span>| Treasury: <span id="footer-treasury">0</span> Gold</span>
+                </div>
+            </footer>
+        </div>
+
+        <!-- Start menu -->
+        <div id="start-menu" class="modal">
+            <div class="modal-content">
+                <h2>Choose Your Civilization</h2>
+                <p class="modal-subtitle">Select an ancient empire and begin your economic journey</p>
+                <div id="civilization-list" class="civilization-list">
+                    <!-- Dynamically populated with civilization options -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Trading Modal -->
+        <div id="trading-modal" class="modal hidden">
+            <div class="modal-content trading-content">
+                <div class="modal-header">
+                    <h2>Trading Post</h2>
+                    <button class="close-btn" onclick="closeTradingModal()">&times;</button>
+                </div>
+                <div class="trading-interface">
+                    <div class="trade-section">
+                        <h3>Sell</h3>
+                        <select id="sell-resource" class="trade-select">
+                            <option value="">Select Resource to Sell</option>
+                        </select>
+                        <input type="number" id="sell-amount" placeholder="Amount" min="0">
+                        <button class="action-btn" onclick="executeTrade()">Trade</button>
+                    </div>
+                    <div class="trade-section">
+                        <h3>Buy</h3>
+                        <select id="buy-resource" class="trade-select">
+                            <option value="">Select Resource to Buy</option>
+                        </select>
+                        <span id="trade-result"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Building Modal -->
+        <div id="building-modal" class="modal hidden">
+            <div class="modal-content building-content">
+                <div class="modal-header">
+                    <h2>Build Structure</h2>
+                    <button class="close-btn" onclick="closeBuildingModal()">&times;</button>
+                </div>
+                <div class="building-list" id="building-list">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/resources.js"></script>
+    <script src="js/economy.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
