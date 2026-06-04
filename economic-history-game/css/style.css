@@ -9,8 +9,8 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #1a1a2e;
+    font-family: 'Arial', sans-serif;
+    background-color: #0a0e27;
     color: #e0e0e0;
     overflow: hidden;
 }
@@ -21,10 +21,6 @@ body {
     display: flex;
     flex-direction: column;
 }
-
-/* ========================
-   Game Container
-   ======================== */
 
 .game-container {
     display: flex;
@@ -37,18 +33,19 @@ body {
    ======================== */
 
 .header {
-    background: linear-gradient(135deg, #2d3561 0%, #1a1a2e 100%);
-    border-bottom: 2px solid #0f3460;
-    padding: 15px 20px;
+    background: linear-gradient(90deg, #1a1a3e 0%, #2d1b3d 100%);
+    border-bottom: 3px solid #16a085;
+    padding: 12px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
 .header h1 {
-    font-size: 24px;
-    color: #e0e0e0;
+    font-size: 22px;
+    color: #16a085;
+    font-weight: bold;
 }
 
 .game-controls {
@@ -63,17 +60,19 @@ body {
 .btn {
     padding: 8px 16px;
     background-color: #0f3460;
-    border: 1px solid #16a085;
+    border: 2px solid #16a085;
     color: #16a085;
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    font-weight: bold;
 }
 
 .btn:hover {
     background-color: #16a085;
-    color: #1a1a2e;
+    color: #0a0e27;
+    transform: scale(1.05);
 }
 
 .btn:active {
@@ -81,21 +80,21 @@ body {
 }
 
 .action-btn {
-    padding: 12px 24px;
+    padding: 10px 16px;
     background-color: #16a085;
-    border: 1px solid #0fa080;
-    color: #1a1a2e;
+    border: 2px solid #0fa080;
+    color: #0a0e27;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .action-btn:hover {
     background-color: #0fa080;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(22, 160, 133, 0.3);
+    box-shadow: 0 4px 12px rgba(22, 160, 133, 0.4);
 }
 
 .action-btn:active {
@@ -110,8 +109,8 @@ body {
     display: flex;
     flex: 1;
     overflow: hidden;
-    gap: 10px;
-    padding: 10px;
+    gap: 8px;
+    padding: 8px;
 }
 
 /* ========================
@@ -119,52 +118,51 @@ body {
    ======================== */
 
 .sidebar {
-    width: 300px;
+    width: 280px;
     background-color: #16213e;
-    border: 1px solid #0f3460;
+    border: 2px solid #0f3460;
     border-radius: 4px;
-    padding: 15px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     overflow-y: auto;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
 .sidebar h2 {
     color: #16a085;
-    font-size: 18px;
-    margin-bottom: 10px;
+    font-size: 16px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .sidebar h3 {
     color: #16a085;
-    font-size: 14px;
-    margin-bottom: 8px;
+    font-size: 12px;
+    margin-bottom: 6px;
     border-bottom: 1px solid #0f3460;
-    padding-bottom: 5px;
+    padding-bottom: 4px;
+    text-transform: uppercase;
 }
-
-/* ========================
-   Empire Info
-   ======================== */
 
 .empire-info {
     border-bottom: 1px solid #0f3460;
-    padding-bottom: 15px;
+    padding-bottom: 12px;
 }
 
 .empire-stats {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .stat {
     display: flex;
     justify-content: space-between;
-    font-size: 14px;
-    padding: 4px;
+    font-size: 12px;
+    padding: 3px;
 }
 
 .stat label {
@@ -177,108 +175,51 @@ body {
 }
 
 /* ========================
-   Resources Panel
+   Panels
    ======================== */
 
-.resources-panel {
+.resources-panel,
+.market-panel,
+.production-panel {
     border-bottom: 1px solid #0f3460;
-    padding-bottom: 15px;
+    padding-bottom: 12px;
 }
 
-.resources-list {
+.resources-list,
+.prices-list,
+.production-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
 }
 
-.resource-item {
+.resource-item,
+.price-item,
+.production-item {
     display: flex;
     justify-content: space-between;
-    font-size: 13px;
-    padding: 6px;
+    font-size: 11px;
+    padding: 4px 6px;
     background-color: #0f3460;
     border-radius: 3px;
 }
 
-.resource-name {
+.resource-name,
+.price-name,
+.production-name {
     color: #b0b0b0;
 }
 
-.resource-amount {
+.resource-amount,
+.price-value {
     color: #16a085;
     font-weight: bold;
 }
 
 .resource-change {
     color: #e0a84b;
-    font-size: 11px;
-    margin-left: 5px;
-}
-
-/* ========================
-   Market Panel
-   ======================== */
-
-.market-panel {
-    border-bottom: 1px solid #0f3460;
-    padding-bottom: 15px;
-}
-
-.prices-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.price-item {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    padding: 6px;
-    background-color: #0f3460;
-    border-radius: 3px;
-}
-
-.price-name {
-    color: #b0b0b0;
-}
-
-.price-value {
-    color: #e0a84b;
-    font-weight: bold;
-}
-
-/* ========================
-   Production Panel
-   ======================== */
-
-.production-panel {
-    flex: 1;
-}
-
-.production-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.production-item {
-    display: flex;
-    flex-direction: column;
-    font-size: 12px;
-    padding: 8px;
-    background-color: #0f3460;
-    border-radius: 3px;
-}
-
-.production-name {
-    color: #16a085;
-    font-weight: bold;
-    margin-bottom: 3px;
-}
-
-.production-rate {
-    color: #b0b0b0;
+    font-size: 10px;
+    margin-left: 4px;
 }
 
 /* ========================
@@ -287,11 +228,11 @@ body {
 
 .game-board {
     flex: 1;
-    background-color: #16213e;
-    border: 1px solid #0f3460;
+    background-color: #0a0e27;
+    border: 2px solid #0f3460;
     border-radius: 4px;
     overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
     position: relative;
@@ -299,45 +240,34 @@ body {
 
 .game-view {
     width: 100%;
-    height: 100%;
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #0a0e27 0%, #16213e 100%);
-    color: #b0b0b0;
-    font-size: 18px;
+    background: linear-gradient(135deg, #0a0e27 0%, #1a1a3e 100%);
     position: relative;
-}
-
-.game-content {
-    text-align: center;
-    position: absolute;
-    z-index: 10;
-}
-
-.game-content h2 {
-    color: #16a085;
-    margin-bottom: 15px;
-    font-size: 32px;
-}
-
-.game-content p {
-    color: #b0b0b0;
-    margin-bottom: 30px;
-    font-size: 16px;
-}
-
-.game-actions {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-    flex-wrap: wrap;
+    overflow: hidden;
 }
 
 #game-canvas {
     display: block;
     width: 100%;
     height: 100%;
+    cursor: crosshair;
+}
+
+.action-bar {
+    background-color: #0f3460;
+    border-top: 2px solid #16a085;
+    padding: 8px 12px;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    overflow-x: auto;
+}
+
+.action-bar .action-btn {
+    flex-shrink: 0;
 }
 
 /* ========================
@@ -346,40 +276,38 @@ body {
 
 .footer {
     background-color: #0f3460;
-    border-top: 1px solid #16a085;
-    padding: 10px 20px;
+    border-top: 2px solid #16a085;
+    padding: 8px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .game-speed {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .game-speed input {
-    width: 100px;
+    width: 80px;
     accent-color: #16a085;
 }
 
 #speed-display {
     color: #16a085;
     font-weight: bold;
-    min-width: 30px;
+    min-width: 25px;
 }
 
 .game-stats-footer {
     color: #16a085;
     font-weight: bold;
-    display: flex;
-    gap: 15px;
 }
 
 /* ========================
-   Modal / Start Menu
+   Modals
    ======================== */
 
 .modal {
@@ -388,7 +316,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.85);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -401,40 +329,29 @@ body {
 
 .modal-content {
     background-color: #16213e;
-    border: 2px solid #16a085;
+    border: 3px solid #16a085;
     border-radius: 8px;
-    padding: 40px;
-    max-width: 800px;
+    padding: 30px;
+    max-width: 700px;
     max-height: 80vh;
     overflow-y: auto;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
 }
 
 .modal-content h2 {
     color: #16a085;
     text-align: center;
     font-size: 24px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
 .modal-subtitle {
     color: #b0b0b0;
     text-align: center;
-    margin-top: 10px;
     margin-bottom: 20px;
-    font-size: 14px;
-}
-
-.building-info {
-    color: #b0b0b0;
-    margin-bottom: 15px;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .close-btn {
@@ -443,7 +360,7 @@ body {
     color: #16a085;
     font-size: 28px;
     cursor: pointer;
-    transition: color 0.3s ease;
+    transition: color 0.2s ease;
 }
 
 .close-btn:hover {
@@ -452,49 +369,52 @@ body {
 
 .civilization-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
 }
 
 .civilization-item {
-    background-color: #0f3460;
+    background: linear-gradient(135deg, #0f3460 0%, #1a4a5a 100%);
     border: 2px solid #16a085;
     border-radius: 6px;
-    padding: 20px;
+    padding: 16px;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .civilization-item:hover {
-    background-color: #16a085;
-    color: #1a1a2e;
-    transform: scale(1.05);
+    background: linear-gradient(135deg, #16a085 0%, #0fa080 100%);
+    color: #0a0e27;
+    transform: scale(1.08);
+    box-shadow: 0 6px 20px rgba(22, 160, 133, 0.4);
 }
 
 .civilization-item h3 {
     color: inherit;
-    margin-bottom: 8px;
-    font-size: 16px;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: bold;
 }
 
 .civilization-item p {
-    font-size: 12px;
+    font-size: 11px;
     opacity: 0.8;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .civilization-item small {
-    font-size: 11px;
+    font-size: 10px;
     opacity: 0.7;
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .civ-location {
-    font-size: 11px;
+    font-size: 10px;
     color: #e0a84b;
-    margin-top: 8px;
+    margin-top: 6px;
+    font-weight: bold;
 }
 
 /* ========================
@@ -508,35 +428,33 @@ body {
 .trading-interface {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-top: 20px;
+    gap: 15px;
+    margin-top: 15px;
 }
 
 .trade-section {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .trade-section h3 {
     color: #16a085;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .trade-select,
-#sell-amount,
-#buy-resource {
+#sell-amount {
     padding: 8px;
     background-color: #0f3460;
     border: 1px solid #16a085;
     color: #e0e0e0;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .trade-select:focus,
-#sell-amount:focus,
-#buy-resource:focus {
+#sell-amount:focus {
     outline: none;
     border-color: #0fa080;
     box-shadow: 0 0 5px rgba(22, 160, 133, 0.3);
@@ -545,66 +463,16 @@ body {
 #trade-result {
     color: #e0a84b;
     font-weight: bold;
-    margin-top: 10px;
-}
-
-/* ========================
-   Building Modal
-   ======================== */
-
-.building-content {
-    max-width: 700px;
-}
-
-.building-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.building-item {
-    background-color: #0f3460;
-    border: 1px solid #16a085;
-    border-radius: 6px;
-    padding: 15px;
-    text-align: center;
-}
-
-.building-item h4 {
-    color: #16a085;
-    margin-bottom: 8px;
-}
-
-.building-item p {
+    margin-top: 8px;
     font-size: 12px;
-    color: #b0b0b0;
-    margin-bottom: 10px;
-}
-
-.building-cost {
-    font-size: 11px;
-    color: #e0a84b;
-    margin-bottom: 5px;
-}
-
-.building-time {
-    font-size: 11px;
-    color: #16a085;
-    margin-bottom: 10px;
-}
-
-.building-item .action-btn {
-    width: 100%;
-    padding: 8px;
 }
 
 /* ========================
-   Scrollbar Styling
+   Scrollbar
    ======================== */
 
 ::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -613,7 +481,7 @@ body {
 
 ::-webkit-scrollbar-thumb {
     background: #16a085;
-    border-radius: 4px;
+    border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -621,16 +489,12 @@ body {
 }
 
 /* ========================
-   Responsive Design
+   Responsive
    ======================== */
 
 @media (max-width: 1024px) {
     .sidebar {
-        width: 250px;
-    }
-
-    .main-content {
-        gap: 5px;
+        width: 240px;
     }
 }
 
@@ -641,18 +505,10 @@ body {
 
     .sidebar {
         width: 100%;
-        max-height: 30vh;
+        max-height: 25vh;
     }
 
     .civilization-list {
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    }
-
-    .trading-interface {
-        grid-template-columns: 1fr;
-    }
-
-    .building-list {
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     }
 }

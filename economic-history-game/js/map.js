@@ -5,50 +5,44 @@
 class MapSystem {
     constructor(game) {
         this.game = game;
-        this.gridSize = 12; // 12x12 grid
-        this.cellSize = 0; // Set in init
+        this.gridSize = 20; // Larger map like OpenFront
+        this.cellSize = 0;
         this.worldLocations = {};
         this.initializeWorldLocations();
-        this.camera = { x: 0, y: 0 };
+        this.camera = { x: 0, y: 0, zoom: 1 };
     }
 
     initializeWorldLocations() {
-        // Different starting positions for each civilization (economy-focused)
         this.worldLocations = {
             'Egypt': {
                 name: 'Nile Delta',
-                position: { x: 3, y: 5 },
+                position: { x: 5, y: 10 },
                 terrain: 'river',
-                bonusResources: { Food: 500 },
-                description: 'Fertile lands of the Nile'
+                color: '#FFD700'
             },
             'Rome': {
                 name: 'Mediterranean Coast',
-                position: { x: 8, y: 4 },
+                position: { x: 15, y: 8 },
                 terrain: 'coastal',
-                bonusResources: { Metal: 300, Luxury: 200 },
-                description: 'Strategic trading hub'
+                color: '#FF6B6B'
             },
             'Persia': {
-                name: 'Silk Road Junction',
-                position: { x: 6, y: 3 },
+                name: 'Silk Road',
+                position: { x: 10, y: 5 },
                 terrain: 'plains',
-                bonusResources: { Wood: 400, Metal: 200 },
-                description: 'Center of trade routes'
+                color: '#4ECDC4'
             },
             'Greece': {
-                name: 'Aegean Islands',
-                position: { x: 9, y: 6 },
+                name: 'Aegean',
+                position: { x: 14, y: 12 },
                 terrain: 'island',
-                bonusResources: { Luxury: 400, Stone: 250 },
-                description: 'Cradle of philosophy and trade'
+                color: '#95E1D3'
             },
             'Mesopotamia': {
-                name: 'Twin Rivers Valley',
-                position: { x: 2, y: 2 },
+                name: 'Twin Rivers',
+                position: { x: 3, y: 7 },
                 terrain: 'river',
-                bonusResources: { Food: 400, Stone: 300 },
-                description: 'Birthplace of civilization'
+                color: '#F7DC6F'
             }
         };
     }
@@ -71,28 +65,30 @@ class MapSystem {
                     x: x,
                     y: y,
                     terrain: this.getTerrainType(x, y),
+                    owner: null,
+                    empireColor: null,
                     building: null,
-                    owner: null
+                    units: 0,
+                    isControlled: false
                 };
             }
         }
     }
 
     getTerrainType(x, y) {
-        // Simple terrain generation
-        const noise = (Math.sin(x * 0.5) + Math.cos(y * 0.5)) / 2;
-        if (noise > 0.3) return 'fertile';
+        const noise = (Math.sin(x * 0.3) + Math.cos(y * 0.3)) / 2;
+        if (noise > 0.3) return 'forest';
         if (noise > 0) return 'plains';
-        if (noise > -0.3) return 'forest';
-        return 'rocky';
+        if (noise > -0.2) return 'hills';
+        return 'mountain';
     }
 
     getTerrainColor(terrain) {
         const colors = {
-            'fertile': '#3d7d3d',
-            'plains': '#8b9d6f',
+            'plains': '#7a9d5a',
             'forest': '#2d5a2d',
-            'rocky': '#7a7a7a',
+            'hills': '#6b8e4a',
+            'mountain': '#5a5a6b',
             'river': '#4da6ff',
             'coastal': '#66ccff',
             'island': '#ffcc99'
@@ -100,21 +96,35 @@ class MapSystem {
         return colors[terrain] || '#666';
     }
 
-    placeBuilding(x, y, building, civilizationName) {
+    claimTerritory(x, y, empire) {
         if (x >= 0 && x < this.gridSize && y >= 0 && y < this.gridSize) {
-            this.grid[y][x].building = building;
-            this.grid[y][x].owner = civilizationName;
+            this.grid[y][x].owner = empire.name;
+            this.grid[y][x].empireColor = empire.color;
+            this.grid[y][x].isControlled = true;
             return true;
         }
         return false;
     }
 
-    removeBuilding(x, y) {
-        if (x >= 0 && x < this.gridSize && y >= 0 && y < this.gridSize) {
-            this.grid[y][x].building = null;
-            return true;
+    expandTerritory(startX, startY, empireColor, empireName, range = 3) {
+        // Expand territory in radius around starting position
+        let expanded = 0;
+        for (let dx = -range; dx <= range; dx++) {
+            for (let dy = -range; dy <= range; dy++) {
+                const x = startX + dx;
+                const y = startY + dy;
+                if (x >= 0 && x < this.gridSize && y >= 0 && y < this.gridSize) {
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist <= range && !this.grid[y][x].isControlled) {
+                        this.grid[y][x].owner = empireName;
+                        this.grid[y][x].empireColor = empireColor;
+                        this.grid[y][x].isControlled = true;
+                        expanded++;
+                    }
+                }
+            }
         }
-        return false;
+        return expanded;
     }
 
     getCellAtPosition(x, y) {
@@ -124,70 +134,88 @@ class MapSystem {
         return null;
     }
 
-    getBuildingColor(building) {
-        const colors = {
-            'Farm': '#90EE90',
-            'Lumber Mill': '#8B4513',
-            'Quarry': '#A9A9A9',
-            'Mine': '#696969',
-            'Market': '#FFD700',
-            'Granary': '#DAA520',
-            'Library': '#4169E1',
-            'Temple': '#FF69B4'
-        };
-        return colors[building.type] || '#ccc';
-    }
-}
-
-// ========================
-// Building Construction System
-// ========================
-
-class Building {
-    constructor(type, x, y, costs) {
-        this.type = type;
-        this.x = x;
-        this.y = y;
-        this.costs = costs; // Resources needed to build
-        this.constructionTime = this.getConstructionTime(type);
-        this.constructionProgress = 0; // 0 to 1
-        this.isComplete = false;
-        this.productionRate = 0;
-        this.workers = 0;
-        this.maxWorkers = 10;
-    }
-
-    getConstructionTime(buildingType) {
-        const times = {
-            'Farm': 10, // seconds
-            'Granary': 20,
-            'Market': 15,
-            'Library': 30,
-            'Lumber Mill': 12,
-            'Quarry': 15,
-            'Mine': 25,
-            'Temple': 40
-        };
-        return times[buildingType] || 15;
-    }
-
-    updateConstruction(deltaTime) {
-        if (!this.isComplete) {
-            this.constructionProgress += deltaTime / this.constructionTime;
-            if (this.constructionProgress >= 1) {
-                this.constructionProgress = 1;
-                this.isComplete = true;
-                return true; // Completed
-            }
+    addUnits(x, y, count) {
+        if (x >= 0 && x < this.gridSize && y >= 0 && y < this.gridSize) {
+            this.grid[y][x].units += count;
+            return true;
         }
         return false;
     }
 
-    getProgressPercentage() {
-        return Math.floor(this.constructionProgress * 100);
+    removeUnits(x, y, count) {
+        if (x >= 0 && x < this.gridSize && y >= 0 && y < this.gridSize) {
+            this.grid[y][x].units = Math.max(0, this.grid[y][x].units - count);
+            return true;
+        }
+        return false;
+    }
+}
+
+// ========================
+// Unit and Combat System
+// ========================
+
+class Unit {
+    constructor(type = 'infantry') {
+        this.type = type;
+        this.health = this.getMaxHealth();
+        this.attack = this.getAttackPower();
+        this.defense = this.getDefense();
+        this.cost = this.getCost();
+        this.productionTime = this.getProductionTime();
     }
 
-    canProduce() {
-        return this.isComplete && this.workers > 0;
+    getMaxHealth() {
+        const stats = { infantry: 100, cavalry: 80, archer: 60, tank: 150 };
+        return stats[this.type] || 100;
+    }
+
+    getAttackPower() {
+        const stats = { infantry: 15, cavalry: 20, archer: 12, tank: 25 };
+        return stats[this.type] || 10;
+    }
+
+    getDefense() {
+        const stats = { infantry: 10, cavalry: 8, archer: 5, tank: 20 };
+        return stats[this.type] || 5;
+    }
+
+    getCost() {
+        const costs = {
+            infantry: { Metal: 50, Wood: 30 },
+            cavalry: { Metal: 100, Wood: 50 },
+            archer: { Metal: 40, Wood: 60 },
+            tank: { Metal: 200, Stone: 100 }
+        };
+        return costs[this.type] || { Metal: 50, Wood: 30 };
+    }
+
+    getProductionTime() {
+        const times = { infantry: 5, cavalry: 8, archer: 6, tank: 15 };
+        return times[this.type] || 5;
+    }
+}
+
+class CombatSystem {
+    static calculateBattle(attackingUnits, defendingUnits) {
+        let attackPower = attackingUnits * 15; // Base unit damage
+        let defensePower = defendingUnits * 10; // Base unit defense
+
+        // Random variation
+        attackPower *= (0.8 + Math.random() * 0.4);
+        defensePower *= (0.8 + Math.random() * 0.4);
+
+        const attackerLosses = Math.ceil((defensePower / (attackPower + defensePower)) * attackingUnits);
+        const defenderLosses = Math.ceil((attackPower / (attackPower + defensePower)) * defendingUnits);
+
+        const attackerWins = attackerLosses < attackingUnits * 0.5;
+
+        return {
+            attackerLosses,
+            defenderLosses,
+            attackerWins,
+            attackPower: attackPower.toFixed(0),
+            defensePower: defensePower.toFixed(0)
+        };
     }
 }

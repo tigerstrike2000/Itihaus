@@ -6,7 +6,7 @@ class Game {
     constructor() {
         this.gameRunning = false;
         this.gamePaused = false;
-        this.gameSpeed = 1; // Multiplier for game speed
+        this.gameSpeed = 1;
         this.currentYear = 1;
         this.deltaTime = 0;
         this.lastFrameTime = 0;
@@ -15,8 +15,10 @@ class Game {
         this.economy = null;
         this.resourceManager = null;
         this.mapSystem = null;
-        this.buildingQueue = [];
         this.selectedCell = null;
+        this.unitQueue = [];
+        this.battles = [];
+        this.notifications = [];
 
         this.init();
     }
@@ -29,57 +31,30 @@ class Game {
 
     setupEventListeners() {
         document.getElementById('pause-btn').addEventListener('click', () => this.togglePause());
-        document.getElementById('menu-btn').addEventListener('click', () => this.showMenu());
         document.getElementById('speed-slider').addEventListener('input', (e) => {
             this.gameSpeed = parseFloat(e.target.value);
             document.getElementById('speed-display').textContent = `${this.gameSpeed}x`;
         });
 
-        // Trading
         document.getElementById('trade-btn').addEventListener('click', () => this.openTradingModal());
-        
-        // Building
-        document.getElementById('build-btn').addEventListener('click', () => this.openBuildingModal());
+        document.getElementById('expand-btn')?.addEventListener('click', () => this.openExpansionPanel());
+        document.getElementById('units-btn')?.addEventListener('click', () => this.openUnitsModal());
+        document.getElementById('attack-btn')?.addEventListener('click', () => this.openAttackPanel());
 
-        // Map click handling
         const gameView = document.getElementById('game-view');
         if (gameView) {
             gameView.addEventListener('click', (e) => this.onMapClick(e));
+            gameView.addEventListener('contextmenu', (e) => this.onMapRightClick(e));
         }
     }
 
     showCivilizationMenu() {
         const civilizations = [
-            { 
-                name: 'Egypt', 
-                description: 'The Nile\'s gift', 
-                bonus: 'Agricultural efficiency +20%',
-                foodBonus: 1.2
-            },
-            { 
-                name: 'Rome', 
-                description: 'Master of roads', 
-                bonus: 'Trading +25%',
-                tradeBonus: 1.25
-            },
-            { 
-                name: 'Persia', 
-                description: 'Empire of unity', 
-                bonus: 'Diplomatic relations +15%',
-                happinessBonus: 1.15
-            },
-            { 
-                name: 'Greece', 
-                description: 'Cradle of knowledge', 
-                bonus: 'Research +30%',
-                researchBonus: 1.3
-            },
-            { 
-                name: 'Mesopotamia', 
-                description: 'Between rivers', 
-                bonus: 'Commerce +20%',
-                commerceBonus: 1.2
-            }
+            { name: 'Egypt', description: 'The Nile\'s gift', bonus: '+20% Food', color: '#FFD700' },
+            { name: 'Rome', description: 'Master of roads', bonus: '+25% Military', color: '#FF6B6B' },
+            { name: 'Persia', description: 'Empire of unity', bonus: '+15% Happiness', color: '#4ECDC4' },
+            { name: 'Greece', description: 'Cradle of knowledge', bonus: '+30% Trade', color: '#95E1D3' },
+            { name: 'Mesopotamia', description: 'Between rivers', bonus: '+20% Commerce', color: '#F7DC6F' }
         ];
 
         const civList = document.getElementById('civilization-list');
@@ -88,7 +63,6 @@ class Game {
         civilizations.forEach(civ => {
             const item = document.createElement('div');
             item.className = 'civilization-item';
-            
             const location = this.mapSystem.getStartingLocation(civ.name);
             item.innerHTML = `
                 <h3>${civ.name}</h3>
@@ -106,24 +80,18 @@ class Game {
     startGame(civilization) {
         document.getElementById('start-menu').style.display = 'none';
         
-        this.empire = new Empire(civilization.name, civilization);
+        this.empire = new Empire(civilization.name, { ...civilization, foodBonus: 1.2 });
+        this.empire.color = civilization.color;
         this.economy = new Economy(this.empire);
         this.resourceManager = new ResourceManager(this.empire);
         
-        // Apply starting location bonuses
-        const startLocation = this.mapSystem.getStartingLocation(civilization.name);
-        Object.entries(startLocation.bonusResources).forEach(([resource, amount]) => {
-            this.empire.resources[resource] += amount;
-        });
-
-        // Initialize production buildings
+        // Setup initial buildings
         this.resourceManager.addProduction('Farm', 'Food', 15);
         this.resourceManager.addProduction('Lumber Mill', 'Wood', 8);
         this.resourceManager.addProduction('Quarry', 'Stone', 5);
         this.resourceManager.addProduction('Mine', 'Metal', 3);
         this.resourceManager.addProduction('Market', 'Luxury', 1);
 
-        // Start with workers
         for (let i = 0; i < this.resourceManager.buildings.length; i++) {
             this.resourceManager.assignWorkers(i, 5);
         }
@@ -131,22 +99,18 @@ class Game {
         this.gameRunning = true;
         this.gamePaused = false;
 
-        // Initialize map display
-        this.mapSystem.initializeMap(
-            document.getElementById('game-board').offsetWidth,
-            document.getElementById('game-board').offsetHeight
-        );
+        const boardElement = document.getElementById('game-board');
+        this.mapSystem.initializeMap(boardElement.offsetWidth, boardElement.offsetHeight);
 
-        // Place starting buildings on the map
-        const startPos = startLocation.position;
-        for (let i = 0; i < this.resourceManager.buildings.length; i++) {
-            const building = this.resourceManager.buildings[i];
-            const newBuilding = new Building(building.type, startPos.x + i, startPos.y, {});
-            newBuilding.isComplete = true;
-            newBuilding.constructionProgress = 1;
-            this.mapSystem.placeBuilding(startPos.x + i, startPos.y, newBuilding, civilization.name);
-        }
+        // Claim starting territory
+        const startLocation = this.mapSystem.getStartingLocation(civilization.name);
+        const startX = startLocation.position.x;
+        const startY = startLocation.position.y;
 
+        this.mapSystem.expandTerritory(startX, startY, civilization.color, civilization.name, 2);
+        this.mapSystem.grid[startY][startX].units = 50; // Starting units
+
+        this.addNotification(`${civilization.name} Empire established at ${startLocation.name}!`, 'info');
         this.updateUI();
         this.render();
         this.gameLoop(performance.now());
@@ -157,7 +121,7 @@ class Game {
             this.lastFrameTime = currentTime;
         }
 
-        this.deltaTime = (currentTime - this.lastFrameTime) / 1000; // Convert to seconds
+        this.deltaTime = (currentTime - this.lastFrameTime) / 1000;
         this.lastFrameTime = currentTime;
 
         if (!this.gamePaused && this.gameRunning) {
@@ -170,90 +134,65 @@ class Game {
     }
 
     update(deltaTime) {
-        // Apply game speed multiplier
         const scaledDeltaTime = deltaTime * this.gameSpeed;
 
-        // Update building construction
-        this.updateBuildingConstruction(scaledDeltaTime);
+        // Unit production
+        this.updateUnitProduction(scaledDeltaTime);
 
-        // Update resource production
+        // Resource production
         this.resourceManager.calculateProduction(scaledDeltaTime);
 
-        // Update empire
+        // Empire updates
         this.empire.update(scaledDeltaTime);
-
-        // Update economy (prices, supply/demand)
         this.economy.update(scaledDeltaTime);
 
-        // Progress time (1 real second = 1 game year at 1x speed)
+        // Unit generation from economy
+        this.generateUnitsFromEconomy(scaledDeltaTime);
+
         this.currentYear += scaledDeltaTime / 5;
     }
 
-    updateBuildingConstruction(deltaTime) {
-        // Update all buildings on map
-        for (let y = 0; y < this.mapSystem.gridSize; y++) {
-            for (let x = 0; x < this.mapSystem.gridSize; x++) {
-                const cell = this.mapSystem.grid[y][x];
-                if (cell.building) {
-                    const completed = cell.building.updateConstruction(deltaTime);
-                    if (completed) {
-                        // Building completed - add to production
-                        this.resourceManager.addProduction(
-                            cell.building.type,
-                            this.getBuildingResourceType(cell.building.type),
-                            this.getBuildingProductionRate(cell.building.type)
-                        );
-                    }
-                }
-            }
+    generateUnitsFromEconomy(deltaTime) {
+        // Generate units based on metal production and treasury
+        const metalProduction = this.empire.productionRates.Metal || 0;
+        const unitGenerationRate = (this.empire.treasury / 10000) * metalProduction * deltaTime;
+        
+        if (unitGenerationRate > 0.1) {
+            const unitsToAdd = Math.floor(unitGenerationRate);
+            const startLocation = this.mapSystem.getStartingLocation(this.empire.name);
+            this.mapSystem.addUnits(startLocation.position.x, startLocation.position.y, unitsToAdd);
         }
     }
 
-    getBuildingResourceType(buildingType) {
-        const types = {
-            'Farm': 'Food',
-            'Lumber Mill': 'Wood',
-            'Quarry': 'Stone',
-            'Mine': 'Metal',
-            'Market': 'Luxury'
-        };
-        return types[buildingType] || 'Food';
-    }
-
-    getBuildingProductionRate(buildingType) {
-        const rates = {
-            'Farm': 8,
-            'Lumber Mill': 5,
-            'Quarry': 3,
-            'Mine': 2,
-            'Market': 0.5
-        };
-        return rates[buildingType] || 1;
+    updateUnitProduction(deltaTime) {
+        // Production logic for queued units
+        this.unitQueue.forEach((unit, index) => {
+            unit.progress += deltaTime;
+            if (unit.progress >= unit.productionTime) {
+                this.unitQueue.splice(index, 1);
+                const startLocation = this.mapSystem.getStartingLocation(this.empire.name);
+                this.mapSystem.addUnits(startLocation.position.x, startLocation.position.y, 1);
+            }
+        });
     }
 
     render() {
         const gameView = document.getElementById('game-view');
         if (!gameView || !this.mapSystem) return;
 
-        // Only render if map system is ready
         if (this.mapSystem.cellSize === 0) return;
 
-        const canvas = document.getElementById('game-canvas');
+        let canvas = document.getElementById('game-canvas');
         if (!canvas) {
-            this.createCanvas(gameView);
-            return;
+            gameView.innerHTML = '';
+            canvas = document.createElement('canvas');
+            canvas.id = 'game-canvas';
+            canvas.width = gameView.offsetWidth;
+            canvas.height = gameView.offsetHeight;
+            gameView.appendChild(canvas);
         }
 
         this.drawMap(canvas);
-    }
-
-    createCanvas(container) {
-        container.innerHTML = '';
-        const canvas = document.createElement('canvas');
-        canvas.id = 'game-canvas';
-        canvas.width = container.offsetWidth;
-        canvas.height = container.offsetHeight;
-        container.appendChild(canvas);
     }
 
     drawMap(canvas) {
@@ -261,7 +200,7 @@ class Game {
         ctx.fillStyle = '#0a0e27';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw grid
+        // Draw grid cells
         for (let y = 0; y < this.mapSystem.gridSize; y++) {
             for (let x = 0; x < this.mapSystem.gridSize; x++) {
                 this.drawCell(ctx, x, y);
@@ -275,39 +214,44 @@ class Game {
         const y = gridY * this.mapSystem.cellSize;
         const size = this.mapSystem.cellSize;
 
+        // Draw territory ownership (semi-transparent)
+        if (cell.isControlled && cell.empireColor) {
+            ctx.fillStyle = cell.empireColor;
+            ctx.globalAlpha = 0.3;
+            ctx.fillRect(x, y, size, size);
+            ctx.globalAlpha = 1;
+        }
+
         // Draw terrain
         ctx.fillStyle = this.mapSystem.getTerrainColor(cell.terrain);
+        ctx.globalAlpha = 0.8;
         ctx.fillRect(x, y, size, size);
+        ctx.globalAlpha = 1;
 
         // Draw grid lines
         ctx.strokeStyle = '#1a3a52';
         ctx.lineWidth = 1;
         ctx.strokeRect(x, y, size, size);
 
-        // Draw building if present
-        if (cell.building) {
-            ctx.fillStyle = this.mapSystem.getBuildingColor(cell.building);
-            const buildingSize = size * 0.7;
-            const offsetX = (size - buildingSize) / 2;
-            const offsetY = (size - buildingSize) / 2;
-            ctx.fillRect(x + offsetX, y + offsetY, buildingSize, buildingSize);
+        // Draw units
+        if (cell.units > 0) {
+            const unitSize = Math.min(size * 0.6, 20);
+            ctx.fillStyle = cell.empireColor || '#16a085';
+            ctx.beginPath();
+            ctx.arc(x + size / 2, y + size / 2, unitSize / 2, 0, Math.PI * 2);
+            ctx.fill();
 
-            // Draw construction progress
-            if (!cell.building.isComplete) {
-                ctx.strokeStyle = '#ff9900';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(x + offsetX, y + offsetY, buildingSize, buildingSize);
-
-                // Progress bar
-                ctx.fillStyle = '#ff9900';
-                const progressWidth = buildingSize * cell.building.constructionProgress;
-                ctx.fillRect(x + offsetX, y + offsetY + buildingSize + 2, progressWidth, 3);
-            }
+            // Unit count
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 10px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(cell.units, x + size / 2, y + size / 2);
         }
 
         // Highlight selected cell
         if (this.selectedCell && this.selectedCell.x === gridX && this.selectedCell.y === gridY) {
-            ctx.strokeStyle = '#16a085';
+            ctx.strokeStyle = '#00FF00';
             ctx.lineWidth = 3;
             ctx.strokeRect(x, y, size, size);
         }
@@ -328,50 +272,103 @@ class Game {
         this.showCellInfo(gridX, gridY);
     }
 
+    onMapRightClick(e) {
+        e.preventDefault();
+        // Right-click attack feature
+        if (this.selectedCell) {
+            this.attackCell(this.selectedCell.x, this.selectedCell.y);
+        }
+    }
+
     showCellInfo(x, y) {
         const cell = this.mapSystem.getCellAtPosition(x, y);
         if (!cell) return;
 
-        let info = `<strong>Cell (${x}, ${y})</strong><br>`;
+        let info = `<strong>Territory (${x}, ${y})</strong><br>`;
         info += `Terrain: ${cell.terrain}<br>`;
-        
-        if (cell.building) {
-            info += `Building: ${cell.building.type}<br>`;
-            info += `Construction: ${cell.building.getProgressPercentage()}%<br>`;
-            info += `Workers: ${cell.building.workers}/${cell.building.maxWorkers}`;
+        if (cell.owner) {
+            info += `Owner: ${cell.owner}<br>`;
+            info += `Units: ${cell.units}`;
         } else {
-            info += `Empty cell - click Build to construct`;
+            info += `Unclaimed - Click Build to expand`;
         }
 
-        // Show in a simple tooltip or update sidebar
         const productionList = document.getElementById('production-list');
         if (productionList) {
-            productionList.innerHTML = `<div style="padding: 10px; background: #0f3460; border-radius: 3px;">${info}</div>` + productionList.innerHTML;
+            productionList.innerHTML = `<div style="padding: 10px; background: #0f3460; border-radius: 3px; font-size: 12px;">${info}</div>`;
+        }
+    }
+
+    attackCell(x, y) {
+        const cell = this.mapSystem.getCellAtPosition(x, y);
+        if (!cell) return;
+
+        const startLocation = this.mapSystem.getStartingLocation(this.empire.name);
+        const myUnits = this.mapSystem.grid[startLocation.position.y][startLocation.position.x].units;
+
+        if (myUnits < 5) {
+            this.addNotification('Not enough units to attack!', 'error');
+            return;
+        }
+
+        if (cell.owner === this.empire.name) {
+            this.addNotification('Cannot attack own territory!', 'error');
+            return;
+        }
+
+        const attackUnits = Math.floor(myUnits * 0.3);
+        const defendUnits = cell.units || 1;
+
+        const result = CombatSystem.calculateBattle(attackUnits, defendUnits);
+        
+        this.mapSystem.removeUnits(startLocation.position.x, startLocation.position.y, result.attackerLosses);
+        cell.units = Math.max(0, defendUnits - result.defenderLosses);
+
+        if (result.attackerWins && cell.units === 0) {
+            this.mapSystem.claimTerritory(x, y, this.empire);
+            this.addNotification(`Territory conquered! +1 domain`, 'success');
+        }
+
+        const message = `Battle at (${x}, ${y}): You lost ${result.attackerLosses} units. Enemy lost ${result.defenderLosses} units.`;
+        this.addNotification(message, result.attackerWins ? 'success' : 'warning');
+    }
+
+    expandTerritory() {
+        const startLocation = this.mapSystem.getStartingLocation(this.empire.name);
+        const expanded = this.mapSystem.expandTerritory(
+            startLocation.position.x,
+            startLocation.position.y,
+            this.empire.color,
+            this.empire.name,
+            1
+        );
+        this.addNotification(`Territory expanded by ${expanded} cells!`, 'info');
+    }
+
+    addNotification(message, type = 'info') {
+        this.notifications.push({ message, type, time: 0 });
+        if (this.notifications.length > 5) {
+            this.notifications.shift();
         }
     }
 
     updateUI() {
-        // Update header info
         document.getElementById('empire-name').textContent = this.empire?.name || 'Empire';
         document.getElementById('population').textContent = Math.floor(this.empire?.population || 0);
         document.getElementById('treasury').textContent = Math.floor(this.empire?.treasury || 0);
         document.getElementById('happiness').textContent = Math.floor(this.empire?.happiness || 50);
         document.getElementById('food-storage').textContent = Math.floor(this.empire?.resources.Food || 0);
 
-        // Update footer stats
-        document.getElementById('footer-population').textContent = Math.floor(this.empire?.population || 0);
-        document.getElementById('footer-treasury').textContent = Math.floor(this.empire?.treasury || 0);
+        if (this.selectedCell) {
+            const cell = this.mapSystem.getCellAtPosition(this.selectedCell.x, this.selectedCell.y);
+            if (cell) {
+                document.getElementById('selected-units').textContent = cell.units || 0;
+            }
+        }
 
-        // Update resources
         this.updateResourcesUI();
-
-        // Update market prices
         this.updatePricesUI();
-
-        // Update production
         this.updateProductionUI();
-
-        // Update year
         document.getElementById('year').textContent = Math.floor(this.currentYear);
     }
 
@@ -415,6 +412,8 @@ class Game {
 
     updateProductionUI() {
         const productionList = document.getElementById('production-list');
+        if (!productionList) return;
+
         productionList.innerHTML = '';
 
         if (!this.resourceManager) return;
@@ -432,117 +431,72 @@ class Game {
         });
     }
 
-    togglePause() {
-        this.gamePaused = !this.gamePaused;
-        document.getElementById('pause-btn').textContent = this.gamePaused ? 'Resume' : 'Pause';
-    }
-
-    showMenu() {
-        console.log('Menu clicked - feature coming soon');
-    }
-
     openTradingModal() {
-        if (!this.empire) return;
-        
         const modal = document.getElementById('trading-modal');
         const sellSelect = document.getElementById('sell-resource');
         const buySelect = document.getElementById('buy-resource');
 
-        sellSelect.innerHTML = '<option value="">Select Resource to Sell</option>';
-        buySelect.innerHTML = '<option value="">Select Resource to Buy</option>';
+        sellSelect.innerHTML = '<option value="">Select Resource</option>';
+        buySelect.innerHTML = '<option value="">Select Resource</option>';
 
         Object.keys(this.empire.resources).forEach(resource => {
-            const option1 = document.createElement('option');
-            option1.value = resource;
-            option1.textContent = resource;
-            sellSelect.appendChild(option1);
+            const opt1 = document.createElement('option');
+            opt1.value = resource;
+            opt1.textContent = resource;
+            sellSelect.appendChild(opt1);
 
-            const option2 = document.createElement('option');
-            option2.value = resource;
-            option2.textContent = resource;
-            buySelect.appendChild(option2);
+            const opt2 = document.createElement('option');
+            opt2.value = resource;
+            opt2.textContent = resource;
+            buySelect.appendChild(opt2);
         });
 
         modal.classList.remove('hidden');
     }
 
-    openBuildingModal() {
-        const modal = document.getElementById('building-modal');
-        const buildingList = document.getElementById('building-list');
-
-        const buildings = [
-            { name: 'Farm', cost: { Wood: 50, Stone: 30 }, bonus: 'Food +8/s', time: 10 },
-            { name: 'Granary', cost: { Wood: 100, Stone: 80 }, bonus: 'Food Storage +500', time: 20 },
-            { name: 'Market', cost: { Stone: 100, Wood: 50 }, bonus: 'Luxury +1/s', time: 15 },
-            { name: 'Library', cost: { Stone: 150, Luxury: 20 }, bonus: 'Research +5', time: 30 },
-            { name: 'Lumber Mill', cost: { Stone: 60, Wood: 40 }, bonus: 'Wood +5/s', time: 12 },
-            { name: 'Quarry', cost: { Wood: 70, Stone: 50 }, bonus: 'Stone +3/s', time: 15 },
-            { name: 'Mine', cost: { Wood: 80, Stone: 100 }, bonus: 'Metal +2/s', time: 25 },
-            { name: 'Temple', cost: { Stone: 200, Luxury: 50 }, bonus: 'Happiness +10', time: 40 }
-        ];
-
-        buildingList.innerHTML = '';
-        buildings.forEach(building => {
-            const costs = Object.entries(building.cost)
-                .map(([resource, amount]) => `${resource}: ${amount}`)
-                .join(', ');
-            
-            const item = document.createElement('div');
-            item.className = 'building-item';
-            item.innerHTML = `
-                <h4>${building.name}</h4>
-                <p>${building.bonus}</p>
-                <div class="building-cost">Cost: ${costs}</div>
-                <div class="building-time">Construction: ${building.time}s</div>
-                <button class="action-btn" onclick="window.game.constructBuilding('${building.name}', ${JSON.stringify(building.cost).replace(/"/g, '\\"')}, ${building.time})">Build</button>
-            `;
-            buildingList.appendChild(item);
-        });
-
+    openUnitsModal() {
+        const modal = document.getElementById('units-modal') || this.createUnitsModal();
         modal.classList.remove('hidden');
     }
 
-    constructBuilding(buildingType, costs, constructionTime) {
-        if (!this.selectedCell) {
-            alert('Select a cell on the map first');
-            return;
+    openAttackPanel() {
+        if (this.selectedCell) {
+            this.attackCell(this.selectedCell.x, this.selectedCell.y);
+        } else {
+            this.addNotification('Select a cell to attack!', 'error');
         }
+    }
 
-        const cell = this.mapSystem.getCellAtPosition(this.selectedCell.x, this.selectedCell.y);
-        if (cell.building) {
-            alert('Cell already has a building');
-            return;
-        }
+    openExpansionPanel() {
+        this.expandTerritory();
+    }
 
-        // Check resources
-        for (const [resource, amount] of Object.entries(costs)) {
-            if (!this.empire.resources[resource] || this.empire.resources[resource] < amount) {
-                alert(`Insufficient ${resource}`);
-                return;
-            }
-        }
+    createUnitsModal() {
+        const modal = document.createElement('div');
+        modal.id = 'units-modal';
+        modal.className = 'modal hidden';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Military Units</h2>
+                    <button class="close-btn" onclick="this.parentElement.parentElement.classList.add('hidden')">&times;</button>
+                </div>
+                <p>Produce military units to expand territory and defend your empire.</p>
+                <div class="units-grid" id="units-grid"></div>
+            </div>
+        `;
+        document.getElementById('app').appendChild(modal);
+        return modal;
+    }
 
-        // Consume resources
-        for (const [resource, amount] of Object.entries(costs)) {
-            this.empire.resources[resource] -= amount;
-        }
-
-        // Create building
-        const building = new Building(buildingType, this.selectedCell.x, this.selectedCell.y, costs);
-        building.constructionTime = constructionTime;
-        this.mapSystem.placeBuilding(this.selectedCell.x, this.selectedCell.y, building, this.empire.name);
-
-        document.getElementById('building-modal').classList.add('hidden');
+    togglePause() {
+        this.gamePaused = !this.gamePaused;
+        document.getElementById('pause-btn').textContent = this.gamePaused ? 'Resume' : 'Pause';
     }
 }
 
-// Global functions for modals
 function closeTradingModal() {
     document.getElementById('trading-modal').classList.add('hidden');
-}
-
-function closeBuildingModal() {
-    document.getElementById('building-modal').classList.add('hidden');
 }
 
 function executeTrade() {
@@ -561,7 +515,6 @@ function executeTrade() {
         return;
     }
 
-    // Simple trade: sell for gold
     const goldValue = amount * window.game.economy.prices[resource];
     window.game.empire.resources[resource] -= amount;
     window.game.empire.treasury += goldValue;
@@ -569,7 +522,6 @@ function executeTrade() {
     document.getElementById('trade-result').textContent = `Sold ${amount} ${resource} for ${goldValue.toFixed(0)} gold`;
 }
 
-// Start the game
 window.addEventListener('load', () => {
     window.game = new Game();
 });
